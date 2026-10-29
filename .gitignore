@@ -1,0 +1,18 @@
+# macOS system files
+.DS_Store
+
+# Compiled C++ files
+*.o
+*.out
+*.exe
+*.a
+
+# Build directories
+build/
+cmake-build-*/
+
+# Temporary files
+*.log
+
+# VS Code settings
+.vscode/
