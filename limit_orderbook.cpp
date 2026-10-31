@@ -7,6 +7,7 @@
 
 struct Order { // struct creates a new data type that allows for combining related information 
     // there fore this creates "order" datatype that stores the follwoing info 
+    // each member of "Order" is accessed via using a dot
     int ID;
     char side;
     int priceCents;
@@ -14,45 +15,112 @@ struct Order { // struct creates a new data type that allows for combining relat
     int quantity; 
 };
 
-Order firstOrder {1, 'S' , 4400, 1, 5}; // each member of "Order" is accessed via using a dot
-Order secondOrder {2, 'S', 10100, 2, 4};
+bool buyComesFirst(const Order& a, const Order& b) { // creating a fucntion that allows for sorting buy higher price first and then oldest position second
+
+    if (a.priceCents != b.priceCents) {
+        return a.priceCents > b.priceCents; // returns true is a's price is higher, false if not
+    }
+    return a.arrivalPos < b.arrivalPos; // if the prices are the same it returns true if a arrived earlier, false if not
+
+}
+
+bool sellComesFirst(const Order& a, const Order& b){
+
+    if (a.priceCents != b.priceCents){
+        return a.priceCents < b.priceCents;
+    }
+    return a.arrivalPos < b.arrivalPos;
+}
+
+void processIncomingOrder( // void means no return value
+    Order newOrder,
+    std::vector<Order>& buy_orders,
+    std::vector<Order>& sell_orders){
+
+        if (newOrder.side == 'S'){
+            for (Order& buy_order : buy_orders){
+                if (newOrder.quantity == 0){
+                    break;
+                }
+                if (buy_order.quantity == 0){
+                    continue;
+                }
+                if (newOrder.priceCents <= buy_order.priceCents){
+                    int matched_quantity = std::min(newOrder.quantity, buy_order.quantity); 
+                    newOrder.quantity -= matched_quantity;
+                    buy_order.quantity -= matched_quantity;
+                } 
+            }
+            
+            if (newOrder.quantity > 0) {
+                sell_orders.push_back(newOrder);
+            }
+            
+            std::sort(
+                sell_orders.begin(),
+                sell_orders.end(),
+                sellComesFirst);
+        
+        } else {
+
+        for (Order& sell_order: sell_orders){
+            if (newOrder.quantity == 0){
+                break;
+            }
+            if (sell_order.quantity == 0){
+                continue;
+            }
+            if (newOrder.priceCents >= sell_order.priceCents){
+                int matched_quantity = std::min(newOrder.quantity, sell_order.quantity);
+                newOrder.quantity -= matched_quantity;
+                sell_order.quantity -= matched_quantity;
+            }
+        }
+
+        sell_orders.erase(
+            std::remove_if(
+                sell_orders.begin(),
+                sell_orders.end(),
+                [](const Order& order) {
+                    return order.quantity == 0;
+                }
+            ),
+            sell_orders.end()
+        );
+
+        if (newOrder.quantity > 0) {
+            buy_orders.push_back(newOrder);
+        }
+
+        std::sort(
+            buy_orders.begin(),
+            buy_orders.end(),
+            buyComesFirst);
+        }
+    }
 
 
 int main() {
 
-    std::vector<Order> sellOrders;
+std::vector<Order> incoming_buy_orders;
+std::vector<Order> incoming_sell_orders;
 
-    sellOrders.push_back(firstOrder);
-    sellOrders.push_back(secondOrder);
+Order firstSell{ 1, 'S', 10000, 1 ,5};
+Order firstBuy{2, 'B', 10000, 2, 7};
 
-    Order buyOrder {4, 'B', 10000, 3, 7};
+processIncomingOrder(
+    firstSell,
+    incoming_buy_orders,
+    incoming_sell_orders);
 
-    for (Order& order : sellOrders){ // this is a range based for loop looping over the items directly when the postions are not needed
-        // order here refers to the current element in the iteration
+processIncomingOrder(
+    firstBuy,
+    incoming_buy_orders,
+    incoming_sell_orders);
 
-        if (buyOrder.quantity == 0){ // this checks if they are any buy orders remaining
-            break;
-        }
+ 
+    std::cout << firstBuy.quantity << std::endl;
 
-        if (order.priceCents <= buyOrder.priceCents){          
-            // order.quantity -= buyOrder.quantity;
-            // std::cout << order.ID << " can match\n";
-
-            int quantityMatch = std::min(buyOrder.quantity, order.quantity); // this selects the lower of the two quantities to decrease btoh quantities by
-
-            buyOrder.quantity -= quantityMatch;
-            order.quantity -= quantityMatch; 
-         };
-
-         // checking how much is remaining for each of the buys and sells 
-    std::cout << "Buyer remaining: " << buyOrder.quantity << '\n';
-
-    for (const Order& order : sellOrders){
-        std::cout << "Sell " << order.ID << " remaining " << order.quantity << '\n';
-    }
-       
-    }
-    
     return 0;
 
 }
