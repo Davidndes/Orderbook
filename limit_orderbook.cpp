@@ -51,6 +51,17 @@ void processIncomingOrder( // void means no return value
                     buy_order.quantity -= matched_quantity;
                 } 
             }
+
+            buy_orders.erase(
+            std::remove_if(
+                buy_orders.begin(),
+                buy_orders.end(),
+                [](const Order& order) {
+                    return order.quantity == 0;
+                }
+            ),
+            buy_orders.end()
+        );
             
             if (newOrder.quantity > 0) {
                 sell_orders.push_back(newOrder);
