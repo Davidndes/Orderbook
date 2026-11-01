@@ -21,7 +21,6 @@ bool buyComesFirst(const Order& a, const Order& b) { // creating a fucntion that
         return a.priceCents > b.priceCents; // returns true is a's price is higher, false if not
     }
     return a.arrivalPos < b.arrivalPos; // if the prices are the same it returns true if a arrived earlier, false if not
-
 }
 
 bool sellComesFirst(const Order& a, const Order& b){
@@ -31,6 +30,7 @@ bool sellComesFirst(const Order& a, const Order& b){
     }
     return a.arrivalPos < b.arrivalPos;
 }
+
 
 void processIncomingOrder( // void means no return value
     Order newOrder,
@@ -88,12 +88,13 @@ void processIncomingOrder( // void means no return value
             }
         }
 
-        sell_orders.erase(
-            std::remove_if(
+        sell_orders.erase(// deletes everything from start up to but not including finish
+            std::remove_if( // moves retained orders to the front
                 sell_orders.begin(),
                 sell_orders.end(),
-                [](const Order& order) {
-                    return order.quantity == 0;
+                // create a function that the algorithm can run itself to decide what to remove
+                [](const Order& order) { // this "[]" is a lambda - a function without a name used directly where needed, empty brackets mean it doesnt use outside variables
+                    return order.quantity == 0; // returns true if the order quantity finishes 
                 }
             ),
             sell_orders.end()
@@ -110,31 +111,58 @@ void processIncomingOrder( // void means no return value
         }
     }
 
-
 int main() {
 
-std::vector<Order> incoming_buy_orders;
-std::vector<Order> incoming_sell_orders;
+    std::vector<Order> incoming_buy_orders;
+    std::vector<Order> incoming_sell_orders;
 
-Order firstSell{ 1, 'S', 10000, 1 ,5};
-Order firstBuy{2, 'B', 10000, 2, 7};
+//    Order firstSell{ 1, 'S', 10000, 1 ,5};
+//    Order firstBuy{2, 'B', 10000, 2, 7};
+    
+    int nextPosition = 1;
 
-processIncomingOrder(
-    firstSell,
-    incoming_buy_orders,
-    incoming_sell_orders);
+    char again;
 
-processIncomingOrder(
-    firstBuy,
-    incoming_buy_orders,
-    incoming_sell_orders);
+    while (true) { // loop allows user to enter their order into the terminal and  
 
- 
-    std::cout << firstBuy.quantity << std::endl;
+    Order newOrder{}; 
 
-    return 0;
+    std::cout << "Enter Order ID, side, price in cents and quantity: \n";
+
+    std::cin >> newOrder.ID
+            >> newOrder.side
+            >> newOrder.priceCents
+            >> newOrder.quantity;
+
+    if (newOrder.side != 'S' && newOrder.side != 'B'){
+        std::cout << "enter correct side" << std::endl;
+        continue; 
+    }
+
+    if (newOrder.priceCents <= 0 || newOrder.quantity <= 0){
+        std::cout << "enter valid price and quantity" << std::endl;
+        continue;
+    }
+
+    newOrder.arrivalPos = nextPosition;
+    nextPosition++;
+
+    processIncomingOrder(
+        newOrder,
+        incoming_buy_orders,
+        incoming_sell_orders);
+
+    std::cout << "Continue? (y/n): ";
+    std::cin >> again;
+
+    if (again != 'y' && again != 'Y') {
+        break;
+    };
+
+    }
+
+   // std::cout << incoming_buy_orders[0].arrivalPos << std::endl;
+
+return 0;
 
 }
-
-
-//
